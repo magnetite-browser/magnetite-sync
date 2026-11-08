@@ -22,7 +22,7 @@ hkdf = "0.13"
 sha2 = "0.11"
 chacha20poly1305 = "0.11"
 rand = "0.10"
-base64 = "0.22"
+base64 = "0.23"
 subtle = "2"
 
 [workspace.lints.rust]
