@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-09)
 
 First public release: protocol v2 (sync codes, signed requests, end-to-end
 encryption with padding), open, closed (the default) or invite-only

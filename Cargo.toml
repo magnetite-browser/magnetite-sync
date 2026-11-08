@@ -10,7 +10,7 @@ repository = "https://github.com/magnetite-browser/magnetite-sync"
 rust-version = "1.85"
 
 [workspace.dependencies]
-magnetite-sync-proto = { path = "proto", version = "0.1.0" }
+magnetite-sync-proto = { path = "proto" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
