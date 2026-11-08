@@ -1,0 +1,6 @@
+/target
+.DS_Store
+# compose.yml's settings: the invite code and the database password
+.env
+# packed binaries (tools/package.sh)
+/dist

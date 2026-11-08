@@ -1,0 +1,4 @@
+[toolchain]
+# Pinned so new lints do not break CI overnight; bump deliberately.
+channel = "1.99"
+components = ["rustfmt", "clippy"]

@@ -1,0 +1,13 @@
+magnetite-sync {{ .Chart.AppVersion }}: {{ .Values.replicaCount }} pod(s) on your database.
+
+Settings are read when a pod starts; after changing one:
+  kubectl --namespace {{ .Release.Namespace }} rollout restart deployment/{{ include "magnetite-sync.fullname" . }}
+
+Check it:
+  kubectl --namespace {{ .Release.Namespace }} port-forward service/{{ include "magnetite-sync.fullname" . }} 8787:{{ .Values.service.port }}
+  curl http://127.0.0.1:8787/v2/health
+
+Magnetite reaches any server but localhost over https:// only. Whatever is in
+front of the service must terminate TLS, pass the Host header on, take request
+bodies of up to 22 MiB and stream them to the server, and limit requests per
+client (the chart's README).

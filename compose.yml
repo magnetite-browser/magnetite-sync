@@ -1,0 +1,48 @@
+services:
+  magnetite-sync:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      # Who may start chains: invite:<a long random code>, open or closed.
+      MAGNETITE_SYNC_REGISTRATION: ${MAGNETITE_SYNC_REGISTRATION:?set MAGNETITE_SYNC_REGISTRATION to invite:<a long random code>, open or closed}
+      MAGNETITE_SYNC_DATABASE_URL: postgres://magnetite_sync:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD to a long random password (hex)}@postgres/magnetite_sync
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Transfers may take 120 s; a stopping server finishes them.
+    stop_grace_period: 130s
+    # The server writes no files.
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    # 4 collection transfers at once (up to ~75 MiB each) and 16 small
+    # requests.
+    mem_limit: 1g
+    pids_limit: 128
+
+  # Reachable only from the server: no published port.
+  postgres:
+    # Pinned by digest (the multi-arch index of 18.6-alpine); bump tag and
+    # digest together. A new major version keeps its data elsewhere in the
+    # volume and starts empty: upgrade with pg_upgrade or dump and restore.
+    image: docker.io/library/postgres:18.6-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: magnetite_sync
+      POSTGRES_DB: magnetite_sync
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD to a long random password (hex)}
+    volumes:
+      - magnetite-sync-postgres:/var/lib/postgresql
+    # Over TCP: while the image sets the database up, it listens on its
+    # socket only.
+    healthcheck:
+      test: ["CMD", "pg_isready", "--host=127.0.0.1", "--username=magnetite_sync", "--dbname=magnetite_sync"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    security_opt: [no-new-privileges:true]
+
+volumes:
+  magnetite-sync-postgres:

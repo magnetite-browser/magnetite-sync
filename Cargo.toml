@@ -1,0 +1,42 @@
+[workspace]
+resolver = "2"
+members = ["proto", "server"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "EUPL-1.2"
+repository = "https://github.com/magnetite-browser/magnetite-sync"
+rust-version = "1.85"
+
+[workspace.dependencies]
+magnetite-sync-proto = { path = "proto", version = "0.1.0" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+ed25519-dalek = "3"
+bip39 = "3"
+hkdf = "0.13"
+sha2 = "0.11"
+chacha20poly1305 = "0.11"
+rand = "0.10"
+base64 = "0.22"
+subtle = "2"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+too_many_lines = "allow"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

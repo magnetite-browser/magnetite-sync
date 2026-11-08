@@ -1,0 +1,57 @@
+name: Bug report
+description: The server does not behave as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Leave out anything secret: no sync words, invite
+        codes, keys, database files or addresses of private servers.
+        Security issues go to a private advisory instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start the server with …
+        2. Turn on sync in Magnetite …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: magnetite-sync version
+      description: The image tag, the release you downloaded, or the commit you built.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: run
+    attributes:
+      label: How you run it
+      options:
+        - Container image
+        - Release binary
+        - Built from source
+    validations:
+      required: true
+  - type: input
+    id: proxy
+    attributes:
+      label: Reverse proxy
+      placeholder: nginx 1.27, Caddy 2.8, none
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: >-
+        Optional. The server's log lines around the problem (RUST_LOG=info or
+        debug). They contain no request data, but check before pasting.
+      render: text

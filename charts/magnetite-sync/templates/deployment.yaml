@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "magnetite-sync.fullname" . }}
+  labels:
+    {{- include "magnetite-sync.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "magnetite-sync.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "magnetite-sync.labels" . | nindent 8 }}
+    spec:
+      # Transfers may take 120 s; a stopping pod finishes them. The pause
+      # first lets the service stop sending it new requests.
+      terminationGracePeriodSeconds: {{ add .Values.preStopSleepSeconds 130 }}
+      # The server never talks to the Kubernetes API.
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: magnetite-sync
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            - name: MAGNETITE_SYNC_REGISTRATION
+              valueFrom:
+                secretKeyRef:
+                  {{- include "magnetite-sync.secretKeyRef" (dict "root" $ "setting" .Values.registration "key" "registration") | nindent 18 }}
+            - name: MAGNETITE_SYNC_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  {{- include "magnetite-sync.secretKeyRef" (dict "root" $ "setting" .Values.database "key" "url") | nindent 18 }}
+            - name: RUST_LOG
+              value: {{ required "config.logLevel must not be empty" .Values.config.logLevel | quote }}
+            {{- range $name, $value := dict "MAGNETITE_SYNC_RETENTION_DAYS" .Values.config.retentionDays "MAGNETITE_SYNC_MAX_CHAINS" .Values.config.maxChains "MAGNETITE_SYNC_MAX_NEW_CHAINS_PER_DAY" .Values.config.maxNewChainsPerDay }}
+            {{- if not (kindIs "invalid" $value) }}
+            {{- if or (lt (int64 $value) 0) (and (kindIs "string" $value) (not (regexMatch "^[0-9]+$" $value))) }}
+            {{- fail (printf "%s must be a whole number, 0 or more" $name) }}
+            {{- end }}
+            - name: {{ $name }}
+              value: {{ int64 $value | toString | quote }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 8787
+              protocol: TCP
+          # Ready while the database answers; alive while the process does.
+          # The server answers only once it has reached and migrated the
+          # database (it tries for about a minute, then exits).
+          readinessProbe:
+            httpGet:
+              path: /v2/ready
+              port: http
+            periodSeconds: 10
+            # The check may take a second on a slow database.
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /v2/health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # A sleep of Kubernetes itself: the image has no shell.
+          {{- with .Values.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: {{ . }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

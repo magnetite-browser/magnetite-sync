@@ -1,0 +1,38 @@
+[package]
+name = "magnetite-sync"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+# sqlx 0.9 needs 1.94; proto, which the browser uses, stays at the workspace's.
+rust-version = "1.94"
+publish = false
+description = "Zero-knowledge, end-to-end encrypted sync server for the Magnetite browser"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "magnetite-sync"
+path = "src/main.rs"
+
+[dependencies]
+magnetite-sync-proto.workspace = true
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "migrate", "macros"] }
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+subtle.workspace = true
+http-body = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["io-util", "test-util"] }
+tower = { version = "0.5", features = ["util"] }
+http-body-util = { version = "0.1", features = ["channel"] }
+
+[lints]
+workspace = true

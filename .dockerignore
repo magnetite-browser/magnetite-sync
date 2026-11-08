@@ -1,0 +1,6 @@
+# Only sources go into the container build.
+.git
+target
+dist
+# compose.yml's settings: the invite code and the database password.
+.env

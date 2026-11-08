@@ -1,0 +1,28 @@
+[package]
+name = "magnetite-sync-proto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["sync", "end-to-end", "encryption", "magnetite"]
+categories = ["cryptography"]
+description = "Shared protocol for Magnetite sync: sync codes, key derivation, request signing, end-to-end encryption, API types"
+
+[dependencies]
+serde.workspace = true
+ed25519-dalek.workspace = true
+bip39.workspace = true
+hkdf.workspace = true
+sha2.workspace = true
+chacha20poly1305.workspace = true
+rand.workspace = true
+base64.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

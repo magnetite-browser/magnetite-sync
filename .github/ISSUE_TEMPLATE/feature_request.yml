@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest an idea or a change.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: How could the server help? Keep in mind that it must never learn what it stores.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Optional. Workarounds or other ways you considered.

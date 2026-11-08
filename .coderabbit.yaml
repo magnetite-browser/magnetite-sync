@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit reviews pull requests: useful, low noise, nothing kept or shared
+# beyond the review itself.
+language: en-US
+tone_instructions: >-
+  Be brief and concrete. Plain English. Only comment when something is wrong,
+  risky or clearly simpler another way.
+early_access: false
+
+reviews:
+  profile: chill
+  # No automatic approvals or change requests; maintainers decide.
+  auto_approvals:
+    enabled: false
+  high_level_summary: true
+  poem: false
+  in_progress_fortune: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  suggested_reviewers: false
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: ["^main$"]
+  path_filters:
+    - "!Cargo.lock"
+    - "!licenses/**"
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: >-
+        Conventional Commits with a short subject, e.g. "fix(server): refuse
+        empty collection ids". Types: feat, fix, docs, refactor, test, build,
+        ci, chore, perf.
+  tools:
+    # CI runs clippy with the pinned toolchain and -D warnings.
+    clippy:
+      enabled: false
+  path_instructions:
+    - path: "server/**"
+      instructions: |
+        The server must stay zero-knowledge and bounded (README "Limits" and "Data it stores",
+        docs/design.md). Flag any change that breaks one of these:
+        - It sees public keys, opaque ids, versions and ciphertext only. A new stored field
+          needs a reason in the README's "Data it stores" table.
+        - Signatures are checked before the chain is looked up, so only the key holder learns
+          whether a chain exists. Collection writes check the signature against their
+          Content-Digest, then the chain, before reading the body, and the body against the
+          digest after.
+        - Request and body sizes, per-chain quotas and write limits, the chain cap, the daily
+          budget of new chains, the admission gate and the deadlines stay in place.
+        - Nothing logs invite codes, keys, signatures, chain ids or client addresses; no
+          request logging.
+        - Several server processes share one database. Whatever must hold across requests
+          (the chain cap, the daily budget, tombstones, write limits, quotas) is decided in
+          Postgres inside one transaction, never in process memory. Deleting a chain removes
+          its rows and keeps its tombstone for ten minutes. SQL is static; values are bound.
+          A migration keeps the previous release working: pods are replaced one at a time.
+        - No unsafe code (forbidden in the workspace).
+    - path: "proto/**"
+      instructions: |
+        The protocol and its cryptography, shared with the browser. A change to the signing
+        string, key derivation, padding, the AEAD's associated data or the wire types is a
+        protocol change: it needs a note in docs/design.md and tests that pin the format.
+        Request types keep deny_unknown_fields; untrusted input never panics; secrets are
+        compared in constant time.
+    - path: "**/*.rs"
+      instructions: |
+        No unwrap/expect where failure is possible at run time outside tests (startup
+        invariants are fine). Typed errors over strings. No needless clones or allocations.
+        Keep clippy::pedantic clean without blanket allows. Comments: concise, above functions
+        and types, updated with the code.
+    - path: "**/tests.rs"
+      instructions: |
+        Tests should pin behaviour: status codes, limits, what is stored and what is not.
+        Flag smoke tests that check nothing specific.
+    - path: "{Dockerfile,compose.yml}"
+      instructions: |
+        The image stays minimal: a static binary on an empty base, base image pinned by
+        digest, a non-root user, licence files in /licenses. compose.yml keeps the server
+        read-only, without capabilities and with its memory and process limits, and Postgres
+        pinned by digest without a published port.
+    - path: "charts/**"
+      instructions: |
+        The chart keeps the image's hardening: non-root 10001, read-only root, no
+        capabilities, the memory limit, no service account token, and the network policy
+        that lets out only DNS and the database. Registration and the database URL come from
+        Secrets only. Every value is documented in its README; Chart.yaml's version and
+        appVersion stay the server's version.
+    - path: "{tools,.github}/**"
+      instructions: |
+        Scripts are POSIX sh or Python 3 without dependencies. Never print secrets. Release
+        steps must fail loudly instead of publishing incomplete files.
+    - path: "**/*.md"
+      instructions: |
+        Plain, short English. Facts (limits, defaults, status codes, variables) must match
+        the code. No marketing language.
+
+chat:
+  art: false
+  auto_reply: false
+  integrations:
+    jira:
+      usage: disabled
+    linear:
+      usage: disabled
+
+knowledge_base:
+  # No data kept between reviews (learnings, indexed issues and PRs).
+  opt_out: true
+  web_search:
+    enabled: false
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - docs/design.md
+      - CONTRIBUTING.md
+  jira:
+    usage: disabled
+  linear:
+    usage: disabled
+  mcp:
+    usage: disabled
+  automatic_linking_mode: disabled
+
+issue_enrichment:
+  auto_enrich:
+    enabled: false
+  planning:
+    enabled: false

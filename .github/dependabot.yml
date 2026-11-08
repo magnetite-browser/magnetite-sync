@@ -1,0 +1,35 @@
+# Weekly dependency updates, one grouped pull request per ecosystem.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      cargo:
+        patterns: ["*"]
+
+  # The build image in the Dockerfile, pinned by digest.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  # Postgres in compose.yml, pinned by digest (the tests and the chart test
+  # use the same image). Minor versions only: a new major keeps its data in
+  # another folder of the volume, so it would start empty (compose.yml).
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*postgres"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

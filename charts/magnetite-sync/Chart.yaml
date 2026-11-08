@@ -1,0 +1,13 @@
+apiVersion: v2
+name: magnetite-sync
+description: Zero-knowledge, end-to-end encrypted sync server for the Magnetite browser
+type: application
+# Released together with the server: both always carry the server's version
+# (Cargo.toml; the release workflow checks).
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://magnetitebrowser.org
+sources:
+  - https://github.com/magnetite-browser/magnetite-sync
+annotations:
+  artifacthub.io/license: EUPL-1.2

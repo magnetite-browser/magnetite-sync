@@ -1,0 +1,6 @@
+# For tools/smoke-test.sh, on top of compose.yml: the server from an image
+# built before, instead of a build of this repository.
+services:
+  magnetite-sync:
+    image: ${MAGNETITE_SYNC_IMAGE:?}
+    pull_policy: never

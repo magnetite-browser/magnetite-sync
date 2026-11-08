@@ -1,0 +1,35 @@
+# `cargo deny check`; CI runs it on every push.
+
+[licenses]
+# magnetite-sync ships under EUPL-1.2. A dependency's licence must let us
+# distribute the combined binary under the EUPL: permissive licences, plus MPL-2.0
+# (file-level copyleft, on the EUPL compatibility list). No GPL/LGPL/AGPL:
+# the EUPL compatibility clause would then put the whole binary under that
+# licence, and Rust links statically.
+allow = [
+    "EUPL-1.2", # this project's crates
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Zlib",
+]
+# The list is a policy, not an inventory: entries no crate uses yet are fine.
+unused-allowed-license = "allow"
+
+[advisories]
+yanked = "deny"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# The server's dependency on proto is a path within this workspace.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

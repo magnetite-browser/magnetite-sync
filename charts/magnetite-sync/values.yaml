@@ -1,0 +1,99 @@
+# magnetite-sync keeps everything in Postgres, which this chart does not run:
+# point it at a database of yours (README.md).
+
+image:
+  repository: ghcr.io/magnetite-browser/magnetite-sync
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# Server processes; they share the database and every limit kept in it.
+replicaCount: 2
+
+# Who may start new chains (MAGNETITE_SYNC_REGISTRATION): "invite:<code>"
+# with a long random code (`openssl rand -hex 16`), "open" or "closed".
+# Required: set `value`, or name a Secret that holds it.
+registration:
+  value: ""
+  existingSecret:
+    name: ""
+    key: registration
+
+# The database (MAGNETITE_SYNC_DATABASE_URL), as
+# postgres://user:password@host:5432/database. Required: set `url`, or name a
+# Secret that holds it. The connection is not encrypted: keep the database in
+# the cluster or on a private network.
+database:
+  url: ""
+  existingSecret:
+    name: ""
+    key: url
+
+# Server settings; null keeps the server's default (README.md).
+config:
+  # MAGNETITE_SYNC_RETENTION_DAYS (400): delete chains unused this long; 0 keeps them.
+  retentionDays: null
+  # MAGNETITE_SYNC_MAX_CHAINS (1000): the database needs room for chains × 32 MiB × 3.
+  maxChains: null
+  # MAGNETITE_SYNC_MAX_NEW_CHAINS_PER_DAY (100); 0 = unlimited.
+  maxNewChainsPerDay: null
+  # RUST_LOG: a level (error … trace) or tracing directives; not empty.
+  logLevel: info
+
+# As compose.yml: 4 collection transfers at once (up to ~75 MiB each) and 16
+# small requests.
+resources:
+  limits:
+    memory: 1Gi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+service:
+  type: ClusterIP
+  port: 8787
+
+# Magnetite reaches any server but localhost over https:// only. Whatever is
+# in front of the service must terminate TLS, pass the Host header on, take
+# request bodies of up to 22 MiB and stream them to the server, and limit
+# requests per client (README.md).
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: ""
+  # The TLS Secret for `host`; empty if TLS ends in front of the ingress.
+  tlsSecretName: ""
+
+# In: the server's port only. Out: DNS and the database's port only.
+networkPolicy:
+  enabled: true
+  databasePort: 5432
+  # NetworkPolicy peers that may reach the server (your ingress controller's
+  # namespace, say); empty: any.
+  from: []
+  # Peers the database is at (its pods or address); empty: any address on
+  # databasePort.
+  databaseTo: []
+
+# On stop, the pod waits this long before the server stops taking requests,
+# so the service has stopped sending it new ones (Kubernetes 1.30 or later);
+# 0 turns the pause off.
+preStopSleepSeconds: 5
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
