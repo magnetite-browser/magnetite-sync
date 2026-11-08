@@ -63,6 +63,16 @@ jobs:
             echo "::error::CHANGELOG.md has no section \"## $version (<date>)\""
             exit 1
           fi
+          # The section becomes the release notes; check it before anything is published.
+          if ! awk -v heading="## $version (" '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found && /[^[:space:]]/ { text = 1 }
+            END { exit !text }
+          ' CHANGELOG.md; then
+            echo "::error::the CHANGELOG.md section for $version is empty"
+            exit 1
+          fi
           echo "release=true" >>"$GITHUB_OUTPUT"
 
   approve:
@@ -178,16 +188,13 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          # The version's CHANGELOG.md section, without its heading.
+          # The version's CHANGELOG.md section, without its heading (the
+          # version job checked that it has text).
           awk -v heading="## $VERSION (" '
             index($0, heading) == 1 { found = 1; next }
             found && /^## / { exit }
             found { print }
           ' CHANGELOG.md >notes.md
-          if ! grep -q '[^[:space:]]' notes.md; then
-            echo "::error::the CHANGELOG.md section for $VERSION is empty"
-            exit 1
-          fi
           {
             echo
             echo "Image: \`ghcr.io/$OWNER/magnetite-sync:$VERSION\` (amd64, arm64). Helm chart: \`oci://ghcr.io/$OWNER/charts/magnetite-sync\`, version $VERSION. Static Linux binaries below; check them against \`SHA256SUMS\`."
