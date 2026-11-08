@@ -22,7 +22,9 @@ hkdf = "0.13"
 sha2 = "0.11"
 chacha20poly1305 = "0.11"
 rand = "0.10"
-base64 = "0.22"
+# Without `simd-unsafe` (on by default), whose engines we do not use: base64
+# then forbids unsafe code.
+base64 = { version = "0.23", default-features = false, features = ["std"] }
 subtle = "2"
 
 [workspace.lints.rust]
